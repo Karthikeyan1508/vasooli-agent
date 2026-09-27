@@ -26,6 +26,8 @@ services:
         sync: false
       - key: ELEVENLABS_OUTBOUND_AGENT_ID
         sync: false
+      - key: ELEVENLABS_WEBHOOK_SECRET
+        sync: false
       - key: DODO_API_KEY
         sync: false
       - key: BREETH_API_KEY
