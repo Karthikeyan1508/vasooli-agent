@@ -35,6 +35,34 @@ services:
       - key: BREETH_MCP_URL
         value: https://mcp.thebreeth.com/mcp
   - type: web
+    name: vasooli-n8n
+    runtime: image
+    image:
+      url: docker.io/n8nio/n8n:latest
+    plan: starter # n8n needs at least 512MB RAM; the free plan OOMs, and only paid plans support the persistent disk below
+    region: singapore
+    disk:
+      name: n8n-data
+      mountPath: /home/node/.n8n # n8n's own SQLite store (workflows, credentials, execution logs) - without this disk, every redeploy wipes it
+      sizeGB: 1
+    envVars:
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: "true" # without this the editor (and every credential stored in it) sits on a public URL with no login
+      - key: N8N_BASIC_AUTH_USER
+        sync: false
+      - key: N8N_BASIC_AUTH_PASSWORD
+        sync: false
+      - key: WEBHOOK_URL
+        value: https://vasooli-n8n.onrender.com # placeholder - Render appends a random suffix to the real hostname; update this to match once assigned, then redeploy
+      - key: BACKEND_API_URL
+        value: https://vasooli-backend-eqq2.onrender.com
+      - key: BREETH_MCP_URL
+        value: https://mcp.thebreeth.com/mcp
+      - key: ELEVENLABS_OUTBOUND_AGENT_ID
+        sync: false
+      - key: ELEVENLABS_OUTBOUND_PHONE_NUMBER_ID
+        sync: false
+  - type: web
     name: vasooli-frontend
     runtime: node
     plan: free
