@@ -1,17 +1,22 @@
 // PostgreSQL helper with an in-memory demo fallback for database-free development.
+import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { Pool, type QueryResultRow } from "pg";
 
 const connectionString = process.env.DATABASE_URL;
-const hasDatabase = Boolean(connectionString && !/(user|pass|host)/i.test(connectionString));
+const hasDatabase = Boolean(
+  connectionString &&
+  connectionString.trim() !== "" &&
+  !connectionString.includes("user:pass@host")
+);
 
 export const pool = new Pool(
   hasDatabase
     ? {
         connectionString,
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
+        ssl: { rejectUnauthorized: false },
       }
     : {}
 );
