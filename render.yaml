@@ -19,7 +19,7 @@ services:
       - key: RBI_BANK_RATE
         value: "6.5"
       - key: FRONTEND_URL
-        sync: false
+        value: https://vasooli-frontend-oizq.onrender.com
       - key: ELEVENLABS_API_KEY
         sync: false
       - key: ELEVENLABS_INTAKE_AGENT_ID
@@ -42,4 +42,4 @@ services:
     startCommand: npm start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://vasooli-backend.onrender.com # You'll update this after the first deploy
+        value: https://vasooli-backend-eqq2.onrender.com
