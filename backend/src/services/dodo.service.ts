@@ -36,7 +36,7 @@ export async function createInvoiceCheckout(invoice: InvoiceRow) {
   const dodo = client();
   const checkout = await dodo.checkoutSessions.create({
     product_cart: [{ product_id: await invoiceProductId(dodo), quantity: 1, amount: toMinorUnits(invoice.amount) }],
-    customer: { email: invoice.buyer_email, name: invoice.buyer_name, phone_number: invoice.buyer_phone },
+    customer: { email: invoice.buyer_email, name: invoice.buyer_name },
     billing_currency: "INR",
     metadata: { invoice_id: invoice.id, invoice_number: invoice.invoice_number },
     return_url: `${process.env.FRONTEND_URL ?? "http://localhost:3000"}/invoices/${invoice.id}?payment=complete`,
