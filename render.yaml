@@ -28,6 +28,8 @@ services:
         sync: false
       - key: DODO_API_KEY
         sync: false
+      - key: DODO_WEBHOOK_SECRET
+        sync: false
       - key: BREETH_API_KEY
         sync: false
       - key: BREETH_MCP_URL
