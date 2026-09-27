@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && node -e \"const fs=require('fs');fs.mkdirSync('dist/backend/src',{recursive:true});fs.copyFileSync('src/schema.sql','dist/backend/src/schema.sql')\"",
+    "test": "tsx --test src/**/*.test.ts",
     "start": "node dist/backend/src/index.js",
     "seed": "tsx src/seed.ts"
   },

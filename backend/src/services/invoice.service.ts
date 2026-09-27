@@ -15,7 +15,7 @@ export function serializeInvoice(invoice: InvoiceRow) { return { invoice_id: inv
 
 // Maps elapsed days to the escalation stage they imply, never regressing a status a call/webhook already advanced (e.g. "called" or "paid").
 export function deriveStatus(daysElapsed: number, currentStatus: string): InvoiceStatusValue {
-  const rank = (status: string) => { const index = STATUS_ORDER.indexOf(status as InvoiceStatusValue); return index === -1 ? 0 : index; };
+  const rank = (status: string) => { const index = STATUS_ORDER.indexOf((status === "called" ? "nudged" : status) as InvoiceStatusValue); return index === -1 ? 0 : index; };
   let target: InvoiceStatusValue = "pending";
   if (daysElapsed >= LEGAL_DEADLINE_DAYS) target = "overdue";
   else if (daysElapsed >= NOTICE_DAY) target = "noticed";

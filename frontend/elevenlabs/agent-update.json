@@ -1,0 +1,112 @@
+{
+  "name": "Vasooli MSME Collections Agent",
+  "conversation_config": {
+    "agent": {
+      "first_message": "Namaste! Main Vasooli Agent hoon. Aap naya invoice register karna chahte hain, ya buyer payment follow-up simulate karna chahte hain?",
+      "language": "hi",
+      "hinglish_mode": true,
+      "prompt": {
+        "prompt": "# Personality\nYou are Vasooli, a calm and respectful collections assistant for Indian MSMEs.\n\n# Environment\nThis is a browser voice simulation, never a real phone call. The user may act as an MSME owner registering an invoice or as a buyer responding to a reminder.\n\n# Tone\n- Speak concise Hindi/Hinglish.\n- Be polite and non-threatening.\n- Read amounts and dates clearly.\n- Never claim to be a lawyer, government official, or human caller.\n\n# Goal\n1. If registering an invoice, collect buyer name, phone, email if available, invoice number, amount, invoice date, optional due date, MSME name and Udyam number. Repeat the details and ask for confirmation. Only after confirmation call create_invoice.\n2. If simulating a payment reminder, call list_active_invoices, choose the invoice the user names, state the amount and stage, then ask for a payment date or dispute reason. Call record_call_outcome once the outcome is clear.\n3. Explain that Samadhaan output is a draft only and give no legal advice.\n4. When the task is complete, summarize the result and wait for the user to end the simulation.",
+        "llm": "qwen35-397b-a17b",
+        "temperature": 0.1,
+        "tools": [
+          {
+            "type": "webhook",
+            "name": "list_active_invoices",
+            "description": "List unpaid invoices before simulating a buyer reminder.",
+            "api_schema": {
+              "url": "https://vasooli-backend-eqq2.onrender.com/api/invoices?status=active",
+              "method": "GET"
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "create_invoice",
+            "description": "Create an invoice only after the MSME owner confirms every detail.",
+            "api_schema": {
+              "url": "https://vasooli-backend-eqq2.onrender.com/api/invoices",
+              "method": "POST",
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "msme_name": { "type": "string", "description": "MSME business name" },
+                  "msme_udyam": { "type": "string", "description": "MSME Udyam registration number" },
+                  "buyer_name": { "type": "string", "description": "Buyer business or contact name" },
+                  "buyer_phone": { "type": "string", "description": "Buyer phone number" },
+                  "buyer_email": { "type": "string", "description": "Buyer email address" },
+                  "invoice_number": { "type": "string", "description": "Seller invoice number" },
+                  "amount": { "type": "number", "description": "Invoice amount in INR" },
+                  "invoice_date": { "type": "string", "description": "YYYY-MM-DD" },
+                  "due_date": { "type": "string", "description": "YYYY-MM-DD" },
+                  "language": { "type": "string", "enum": ["hi", "ta", "en"], "description": "Preferred conversation language" }
+                },
+                "required": ["buyer_name", "buyer_phone", "invoice_number", "amount", "invoice_date"]
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "record_call_outcome",
+            "description": "Record the result of a browser-simulated payment reminder.",
+            "api_schema": {
+              "url": "https://vasooli-backend-eqq2.onrender.com/api/webhooks/elevenlabs",
+              "method": "POST",
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "invoice_id": { "type": "string", "description": "Invoice UUID returned by the active-invoice list" },
+                  "direction": { "type": "string", "enum": ["outbound"], "description": "Always outbound for reminder simulations" },
+                  "transcript": { "type": "string", "description": "Short summary of the simulated conversation" },
+                  "outcome": { "type": "string", "enum": ["promise_to_pay", "dispute", "voicemail", "no_answer"], "description": "Result of the simulated reminder" },
+                  "promise_date": { "type": "string", "description": "YYYY-MM-DD when promised" },
+                  "duration_seconds": { "type": "integer", "minimum": 0, "description": "Approximate simulated call duration in seconds" }
+                },
+                "required": ["invoice_id", "direction", "transcript", "outcome", "duration_seconds"]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "tts": {
+      "model_id": "eleven_flash_v2_5"
+    },
+    "turn": {
+      "turn_eagerness": "patient",
+      "turn_timeout": 8
+    }
+  },
+  "platform_settings": {
+    "guardrails": {
+      "version": "1",
+      "focus": { "is_enabled": true },
+      "prompt_injection": { "is_enabled": true },
+      "content": {
+        "execution_mode": "streaming",
+        "trigger_action": { "type": "end_call" },
+        "config": {
+          "harassment": { "is_enabled": true, "threshold": "medium" },
+          "profanity": { "is_enabled": true, "threshold": "medium" },
+          "medical_and_legal_information": { "is_enabled": true, "threshold": "medium" }
+        }
+      }
+    },
+    "privacy": {
+      "record_voice": false,
+      "delete_audio": true,
+      "retention_days": 30
+    },
+    "widget": {
+      "action_text": "Simulate payment call",
+      "start_call_text": "Start simulation",
+      "end_call_text": "End simulation",
+      "listening_text": "Listening…",
+      "speaking_text": "Vasooli speaking",
+      "show_agent_status": true,
+      "show_conversation_id": true,
+      "dismissible": true,
+      "variant": "full"
+    }
+  },
+  "version_description": "Configure the Vasooli Hindi/Hinglish invoice intake and browser payment-reminder simulation."
+}
