@@ -1,0 +1,6 @@
+# Backend dependencies, generated output, and local secrets.
+node_modules/
+dist/
+.env
+*.log
+*.tsbuildinfo

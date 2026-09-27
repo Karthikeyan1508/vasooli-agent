@@ -1,0 +1,8 @@
+{
+  "_comment": "Demo invoice portfolio shown when no database is connected.",
+  "invoices": [
+    { "id": 1, "header": "Kaveri Retail Pvt Ltd · SEW-2026-101", "type": "Invoice", "status": "Pending", "target": "₹85k", "limit": "33 days", "reviewer": "Hindi intake" },
+    { "id": 2, "header": "Aarav Distributors · SEW-2026-102", "type": "Follow-up", "status": "Called", "target": "₹1.43L", "limit": "11 days", "reviewer": "ElevenLabs voice agent" },
+    { "id": 3, "header": "Narmada Stores · SEW-2026-103", "type": "Samadhaan", "status": "Overdue", "target": "₹2.10L", "limit": "Day 46", "reviewer": "Complaint draft ready" }
+  ]
+}

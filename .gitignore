@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output and framework caches
+dist/
+.next/
+out/
+coverage/
+
+# Local environment files and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Logs and local tooling
+*.log
+.DS_Store
+*.tsbuildinfo
+
+# Generated JavaScript next to shared TypeScript contracts
+shared/*.js

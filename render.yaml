@@ -1,0 +1,48 @@
+# Render Blueprint provisioning the backend, frontend, and Postgres database.
+services:
+  - type: web
+    name: vasooli-backend
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vasooli-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: RBI_BANK_RATE
+        value: "6.5"
+      - key: FRONTEND_URL
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_INTAKE_AGENT_ID
+        sync: false
+      - key: ELEVENLABS_OUTBOUND_AGENT_ID
+        sync: false
+      - key: DODO_API_KEY
+        sync: false
+      - key: BREETH_API_KEY
+        sync: false
+      - key: BREETH_MCP_URL
+        value: https://mcp.thebreeth.com/mcp
+  - type: web
+    name: vasooli-frontend
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://vasooli-backend.onrender.com
+databases:
+  - name: vasooli-db
+    plan: free
+    region: singapore
