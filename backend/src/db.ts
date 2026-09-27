@@ -91,6 +91,12 @@ function demoQuery(sql: string, params: unknown[]): unknown[] {
     if (normalized.includes("where i.id")) {
       return invoices.filter((invoice) => invoice.id === params[0]);
     }
+    if (normalized.includes("i.status <> 'paid'")) {
+      return invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "filed");
+    }
+    if (normalized.includes("where i.status =")) {
+      return invoices.filter((invoice) => invoice.status === params[0]);
+    }
     return [...invoices];
   }
 
@@ -120,6 +126,15 @@ function demoQuery(sql: string, params: unknown[]): unknown[] {
       invoice.days_elapsed = params[2];
     }
     return [{ id: invoice.id }];
+  }
+
+  if (normalized.startsWith("delete from complaints")) {
+    complaints.delete(String(params[0]));
+    return [];
+  }
+
+  if (normalized.startsWith("delete from calls")) {
+    return [];
   }
 
   if (normalized.startsWith("insert into complaints")) {

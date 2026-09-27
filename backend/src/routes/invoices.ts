@@ -5,28 +5,36 @@ import { z } from "zod";
 import { LEGAL_DEADLINE_DAYS, RBI_BANK_RATE, INTEREST_MULTIPLIER } from "../../../shared/constants.js";
 import { query } from "../db.js";
 import { ensureComplaint } from "../services/complaint.service.js";
-import { findInvoice, listInvoices, serializeInvoice } from "../services/invoice.service.js";
+import { STATUS_ORDER, deriveStatus, findInvoice, listInvoices, serializeInvoice } from "../services/invoice.service.js";
 import { calculateInterest } from "../services/interest.js";
 
 const router = Router();
-const statuses = ["pending", "nudged", "noticed", "called", "overdue", "filed", "paid"] as const;
+const statuses = STATUS_ORDER;
 
 const createSchema = z.object({
-  msme_name: z.string().default("Shakti Engineering Works"),
-  msme_udyam: z.string().default("UDYAM-DL-01-0098765"),
+  msme_name: z.string().optional().default("Shakti Engineering Works"),
+  msme_udyam: z.string().optional().default("UDYAM-DL-01-0098765"),
   buyer_name: z.string(),
   buyer_phone: z.string(),
-  buyer_email: z.string().email().optional().default("accounts@buyer.example"),
+  buyer_email: z.string().email().optional().default("buyer@unknown.local"),
   invoice_number: z.string(),
-  amount: z.number().positive(),
+  amount: z.coerce.number().positive(),
   invoice_date: z.string(),
-  due_date: z.string(),
+  due_date: z.string().optional(),
   language: z.enum(["hi", "ta", "en"]).default("hi"),
 });
 
+function defaultDueDate(invoiceDate: string) {
+  const date = new Date(`${invoiceDate}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + 45);
+  return date.toISOString().slice(0, 10);
+}
+
 // GET /api/invoices - list invoices with dynamic legal clock & statutory interest
-router.get("/", async (_req, res) => {
-  const invoices = await listInvoices();
+router.get("/", async (req, res) => {
+  const statusFilter = typeof req.query.status === "string" ? req.query.status : undefined;
+  const invoices = await listInvoices(statusFilter as "active" | (typeof STATUS_ORDER)[number] | undefined);
+  
   const serialized = invoices.map((inv) => {
     const s = serializeInvoice(inv);
     const daysOverdue = Math.max(0, s.days_elapsed - LEGAL_DEADLINE_DAYS);
@@ -73,8 +81,8 @@ router.get("/:id", async (req, res) => {
 // POST /api/invoices - Intake endpoint called by n8n / ElevenLabs
 router.post("/", async (req, res) => {
   const input = createSchema.parse(req.body);
+  const dueDate = input.due_date ?? defaultDueDate(input.invoice_date);
 
-  // Upsert MSME
   const msme = (
     await query<{ id: string }>(
       `INSERT INTO msmes (name, udyam) VALUES ($1,$2) ON CONFLICT (udyam) DO UPDATE SET name=EXCLUDED.name, updated_at=now() RETURNING id`,
@@ -82,7 +90,6 @@ router.post("/", async (req, res) => {
     )
   )[0];
 
-  // Insert Buyer
   const buyer = (
     await query<{ id: string }>(
       `INSERT INTO buyers (name, phone, email) VALUES ($1,$2,$3) RETURNING id`,
@@ -90,11 +97,10 @@ router.post("/", async (req, res) => {
     )
   )[0];
 
-  // Insert Invoice
   const created = (
     await query<{ id: string }>(
       `INSERT INTO invoices (msme_id, buyer_id, invoice_number, amount, invoice_date, due_date, language, status) VALUES ($1,$2,$3,$4,$5,$6,$7,'pending') RETURNING id`,
-      [msme.id, buyer.id, input.invoice_number, input.amount, input.invoice_date, input.due_date, input.language]
+      [msme.id, buyer.id, input.invoice_number, input.amount, input.invoice_date, dueDate, input.language]
     )
   )[0];
 
@@ -126,6 +132,30 @@ router.post("/:id/status", async (req, res) => {
   }
 
   res.json(serializeInvoice(invoice));
+});
+
+// POST /api/invoices/:id/increment-days - n8n Daily Scheduler route
+router.post("/:id/increment-days", async (req, res) => {
+  const body = z.object({ days: z.number().int().positive().default(1) }).parse(req.body ?? {});
+  const invoice = await findInvoice(req.params.id);
+  if (!invoice) return res.status(404).json({ error: "Invoice not found" });
+
+  const daysElapsed = invoice.days_elapsed + body.days;
+  const status = deriveStatus(daysElapsed, invoice.status);
+
+  const updated = (
+    await query<{ id: string }>(
+      `UPDATE invoices SET status=$2, days_elapsed=$3, updated_at=now() WHERE id=$1 RETURNING id`,
+      [invoice.id, status, daysElapsed]
+    )
+  )[0];
+
+  const refreshed = (await findInvoice(updated.id))!;
+  if (daysElapsed >= LEGAL_DEADLINE_DAYS && status !== "paid") {
+    await ensureComplaint(refreshed);
+  }
+
+  res.json(serializeInvoice(refreshed));
 });
 
 // GET /api/invoices/:id/complaint.pdf - Download Samadhaan legal complaint PDF

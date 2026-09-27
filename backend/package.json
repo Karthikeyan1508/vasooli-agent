@@ -1,7 +1,31 @@
 {
   "_comment": "Backend package manifest for the Express API.",
-  "name": "vasooli-backend", "private": true, "version": "0.1.0", "type": "module",
-  "scripts": { "dev": "tsx watch src/index.ts", "build": "tsc && node -e \"const fs=require('fs');fs.copyFileSync('src/schema.sql','dist/schema.sql');fs.cpSync('dist/backend/src','dist',{recursive:true})\"", "start": "node dist/index.js", "seed": "tsx src/seed.ts", "db:verify": "tsx src/verify-db.ts" },
-  "dependencies": { "cors": "^2.8.5", "dotenv": "^16.5.0", "express": "^5.1.0", "pdfkit": "^0.16.0", "pg": "^8.13.3", "zod": "^3.24.3" },
-  "devDependencies": { "@types/cors": "^2.8.17", "@types/express": "^5.0.1", "@types/node": "^22.15.3", "@types/pdfkit": "^0.13.8", "@types/pg": "^8.11.10", "tsx": "^4.19.3", "typescript": "^5.8.3" }
+  "name": "vasooli-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && node -e \"const fs=require('fs');fs.mkdirSync('dist/backend/src',{recursive:true});fs.copyFileSync('src/schema.sql','dist/backend/src/schema.sql')\"",
+    "start": "node dist/backend/src/index.js",
+    "seed": "tsx src/seed.ts",
+    "db:verify": "tsx src/verify-db.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "pdfkit": "^0.16.0",
+    "pg": "^8.13.3",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.3",
+    "@types/pdfkit": "^0.13.8",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
 }
