@@ -1,0 +1,6 @@
+{
+  "_comment": "Declares this folder as ESM so the backend's NodeNext build compiles shared/*.ts consistently with backend/src, instead of silently falling back to CommonJS.",
+  "name": "vasooli-shared",
+  "private": true,
+  "type": "module"
+}
