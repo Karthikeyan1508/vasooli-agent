@@ -45,4 +45,11 @@ npm run dev
 3. Render reads `render.yaml` and provisions the backend, frontend, and Postgres in one pass.
 4. Set the `sync: false` secrets (ElevenLabs, Dodo, Breeth keys) in the Render dashboard.
 
+The current deployment URLs are:
+
+- Backend: `https://vasooli-backend-eqq2.onrender.com`
+- Frontend: `https://vasooli-frontend-oizq.onrender.com`
+
+Set `BACKEND_API_URL=https://vasooli-backend-eqq2.onrender.com` in n8n when importing the orchestration workflows. The Render blueprint already supplies the backend's `FRONTEND_URL` and the frontend's `NEXT_PUBLIC_API_URL`.
+
 Import the n8n workflow JSON files from `orchestration/workflows/`, then create credentials named `Vasooli Backend API`, `Breeth MCP`, and `ElevenLabs API`.

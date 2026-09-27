@@ -26,10 +26,10 @@ router.post("/elevenlabs", idempotency, async (req, res) => {
     )
   )[0];
 
-  // Automatically transition invoice status to 'called' upon outbound call completion
+  // Automatically transition invoice status to 'called' upon call completion
   await query(
-    `UPDATE invoices SET status='called', updated_at=now() WHERE id=$1 AND status NOT IN ('paid', 'filed')`,
-    [data.invoice_id]
+    `UPDATE invoices SET status=$2, updated_at=now() WHERE id=$1 AND status NOT IN ('paid', 'filed')`,
+    [data.invoice_id, "called"]
   );
 
   res.status(201).json({ call_id: call?.id ?? "logged", outcome: data.outcome });
@@ -45,7 +45,7 @@ router.post("/dodo", idempotency, async (req, res) => {
     .parse(req.body);
 
   if (data.status === "succeeded") {
-    await query(`UPDATE invoices SET status='paid', updated_at=now() WHERE id=$1`, [data.invoice_id]);
+    await query(`UPDATE invoices SET status=$2, updated_at=now() WHERE id=$1`, [data.invoice_id, "paid"]);
   }
 
   res.json({ received: true, invoice_id: data.invoice_id, status: data.status });
