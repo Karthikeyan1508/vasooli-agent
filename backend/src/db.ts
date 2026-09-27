@@ -4,7 +4,21 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { Pool, type QueryResultRow } from "pg";
 const connectionString = process.env.DATABASE_URL;
-const hasDatabase = Boolean(connectionString && !/(user|pass|host)/i.test(connectionString));
+// Render's auto-generated Postgres usernames are literally "<dbname>_user", so a substring check for
+// "user"/"pass"/"host" anywhere in the string misclassifies real connection strings as a placeholder.
+// Instead, parse out the actual username/password/host components and check those exactly.
+function looksLikePlaceholder(url: string): boolean {
+  try {
+    const parsed = new URL(url.replace(/^postgres(ql)?:/, "http:"));
+    const host = parsed.hostname.toLowerCase();
+    const user = decodeURIComponent(parsed.username).toLowerCase();
+    const pass = decodeURIComponent(parsed.password).toLowerCase();
+    return host === "host" || user === "user" || pass === "pass" || pass === "password";
+  } catch {
+    return true;
+  }
+}
+const hasDatabase = Boolean(connectionString && !looksLikePlaceholder(connectionString));
 export const pool = new Pool(hasDatabase ? { connectionString, ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined } : {});
 let demoMode = !hasDatabase;
 const invoices: Record<string, any>[] = [
